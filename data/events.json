@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "events": [
+    {
+      "ts": 1769690687615,
+      "uid": "9243f70f-404a-4e75-8853-64277d58a1eb",
+      "type": "checkout_succeeded",
+      "meta": {
+        "source": "redirect"
+      }
+    }
+  ]
+}
