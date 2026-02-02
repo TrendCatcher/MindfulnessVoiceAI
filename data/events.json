@@ -30,6 +30,46 @@
       "meta": {
         "provider": "stripe_payment_link"
       }
+    },
+    {
+      "ts": 1770009854872,
+      "uid": "4f3c0919-c470-44ae-9a2f-0fbf117076a4",
+      "type": "session_start",
+      "meta": {
+        "emotion": "NEUTRAL",
+        "situation": "GENERAL"
+      }
+    },
+    {
+      "ts": 1770009864577,
+      "uid": "4f3c0919-c470-44ae-9a2f-0fbf117076a4",
+      "type": "checkout_clicked"
+    },
+    {
+      "ts": 1770009865040,
+      "uid": "4f3c0919-c470-44ae-9a2f-0fbf117076a4",
+      "type": "checkout_started",
+      "meta": {
+        "provider": "stripe_payment_link"
+      }
+    },
+    {
+      "ts": 1770010174307,
+      "uid": "4f3c0919-c470-44ae-9a2f-0fbf117076a4",
+      "type": "session_start",
+      "meta": {
+        "emotion": "NEUTRAL",
+        "situation": "GENERAL"
+      }
+    },
+    {
+      "ts": 1770010664253,
+      "uid": "4f3c0919-c470-44ae-9a2f-0fbf117076a4",
+      "type": "session_start",
+      "meta": {
+        "emotion": "NEUTRAL",
+        "situation": "GENERAL"
+      }
     }
   ]
 }

@@ -7,6 +7,7 @@ export type MemoryTurn = {
   emotion: string;
   situation: string;
   extractedStressors: string[];
+  resilienceScore?: number;
 };
 
 export type UserMemory = {

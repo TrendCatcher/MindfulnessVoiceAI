@@ -23,6 +23,7 @@ type AnalyzeResponse = {
     meditation: string;
     tags: { emotionLabel: string; situationLabel: string };
     offer: { priceUsdMonthly: number; cta: string };
+    resilienceScore?: number;
 };
 
 declare global {
@@ -47,8 +48,8 @@ export default function Home() {
             window.speechSynthesis.cancel();
             const utter = new SpeechSynthesisUtterance(text);
             utter.lang = 'ko-KR';
-            utter.rate = 1.02;
-            utter.pitch = 1.0;
+            utter.rate = 0.85; // slower
+            utter.pitch = 0.9; // deeper/calmer
             const voices = window.speechSynthesis.getVoices();
             const ko = voices.find((v) => (v.lang || '').toLowerCase().startsWith('ko'));
             if (ko) utter.voice = ko;
@@ -174,15 +175,7 @@ export default function Home() {
                                     fw={700}
                                     style={{ lineHeight: 1.2 }}
                                 >
-                                    <Text
-                                        component="span"
-                                        variant="gradient"
-                                        gradient={{ from: 'cyan', to: 'violet', deg: 90 }}
-                                        inherit
-                                    >
-                                        Software becomes labor.
-                                    </Text>
-                                    <br />
+
                                     <Text
                                         component="span"
                                         c="white"
@@ -353,6 +346,21 @@ export default function Home() {
                                     <Text c="dimmed" size="sm">
                                         {aiResponse.tags.situationLabel} · {aiResponse.tags.emotionLabel}
                                     </Text>
+
+                                    {/* Resilience Badge */}
+                                    {aiResponse.resilienceScore !== undefined && (
+                                        <Group gap="xs" mt="xs">
+                                            <Text size="xs" c="teal.3" fw={700}>회복탄력성 지수 (CD-RISC)</Text>
+                                            <Progress
+                                                value={aiResponse.resilienceScore}
+                                                color="teal"
+                                                size="sm"
+                                                w={100}
+                                                radius="xl"
+                                            />
+                                            <Text size="xs" c="white">{aiResponse.resilienceScore}점</Text>
+                                        </Group>
+                                    )}
                                 </Stack>
 
                                 {/* 응답 본문 */}
@@ -455,6 +463,17 @@ export default function Home() {
                     © 2030 Burnout Buddy MVP. Early Access.
                 </Text>
             </Box>
+
+            {/* Awareness Spike Notification (Toast-like or Fixed Bottom) */}
+            <div className="animate-fade-in" style={{ position: 'fixed', bottom: '50px', right: '20px', zIndex: 1000, maxWidth: '300px' }}>
+                <Paper p="md" radius="md" bg="rgba(50, 50, 50, 0.9)" withBorder>
+                    <Text size="xs" c="cyan.3" fw={700} mb="xs">💡 Awareness Spike Tip</Text>
+                    <Text size="sm" c="white">
+                        처음 마음챙김을 할 때 스트레스가 더 크게 느껴질 수 있어요. <br />
+                        그건 "나빠지는 것"이 아니라, "알아차리기 시작한 것"입니다. 안심하세요.
+                    </Text>
+                </Paper>
+            </div>
         </>
     );
 }

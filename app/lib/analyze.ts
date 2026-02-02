@@ -119,6 +119,7 @@ export type Script = {
   voiceText: string;
   meditationText: string;
   tags: { emotionLabel: string; situationLabel: string };
+  resilienceScore?: number;
 };
 
 export function buildPersonalizedScript(args: {
@@ -131,32 +132,80 @@ export function buildPersonalizedScript(args: {
 
   const who = name ? `${name}님` : '당신';
   const emotionLabel = koEmotionLabel(analysis.emotion);
-  const situationLabel = koSituationLabel(analysis.situation);
+
+  // 상황별 공감 멘트 (더 부드럽고 수용적인 톤)
+  let situationValidation = '';
+  switch (analysis.situation) {
+    case 'BOSS_CONFLICT':
+      situationValidation = `누구보다 잘하고 싶었던 마음, 제가 다 알아요. 그 마음이 상처받지 않게 잠시 안아줄게요.`;
+      break;
+    case 'OVERTIME':
+      situationValidation = `오늘 하루도 정말 치열하게 버티셨군요. 당신의 에너지는 무한하지 않아요. 지금은 오직 '휴식'만 생각해도 괜찮아요.`;
+      break;
+    case 'DEADLINE':
+      situationValidation = `쫓기는 기분, 심장이 뛰는 그 느낌... 알아요. 하지만 ${who}, 당신의 존재 가치는 속도에 있지 않아요.`;
+      break;
+    default:
+      situationValidation = `지금 겪고 있는 ${emotionLabel}, 혼자 감당하기엔 너무 무거운 짐이었을 거예요.`;
+  }
 
   const memoryLine = lastMemoryNudge
-    ? `그리고 ${who}, 지난번에 말씀하신 “${lastMemoryNudge}”도 계속 마음에 남아 있었겠어요.`
+    ? `\n\n지난번의 “${lastMemoryNudge}”도 여전히 마음에 남아 계신가요? 오늘은 그 짐도 잠시 내려놓아요.`
     : '';
 
-  const validate = `${who}, 지금 느끼는 감정은 “${emotionLabel}”에 가까워 보여요. ${situationLabel}에서 이런 마음이 드는 건 아주 자연스러운 반응이에요.`;
-  const reflect = `말해주신 내용(“${text}”)을 보면, 단순히 힘든 게 아니라 ‘내가 충분하지 않다’는 느낌까지 같이 올라왔을 수 있어요. ${memoryLine}`.trim();
-  const reframe = `지금 이 순간에 필요한 건 문제를 ‘즉시 해결’하는 힘이 아니라, 내 마음을 다시 안전한 곳으로 데려오는 짧은 회복이에요.`;
+  const validate = `${who}, 지금 느끼는 “${emotionLabel}”의 감정... 이건 당신이 약해서가 아니라, 지금까지 너무 애써왔다는 증거예요. ${situationValidation}`;
+  const reflect = `말해주신 이야기(“${text}”) 속에서, 저는 당신의 외로움과 간절함을 느꼈어요. 이제 더 이상 혼자 삼키지 마세요. 제가 곁에 있을게요.`.trim();
+  const reframe = `지금 필요한 건 해결책이 아니에요. 그저 '나'를 위한 따뜻한 위로입니다. 당신은 이미 충분합니다. ${memoryLine}`;
 
   const meditation = [
-    `1분 마음챙김(가이드)`,
-    `- 0:00~0:15: 어깨 힘을 10%만 풀고, 숨을 코로 천천히 들이마셔요.`,
-    `- 0:15~0:35: 들숨에 “괜찮아”, 날숨에 “놓아도 돼”라고 마음속으로 말해요.`,
-    `- 0:35~0:55: 지금 몸에서 가장 긴장된 곳(턱/목/가슴)을 찾아, 그 부위에 숨을 보내요.`,
-    `- 0:55~1:00: 마지막으로 한 문장만. “나는 지금 최선을 다하고 있고, 잠깐 쉬어갈 자격이 있다.”`,
+    `1분 치유 호흡 (Healing Breath)`,
+    `- 0:00~0:15: 가슴에 손을 얹고, 심장 소리를 느껴보세요.`,
+    `- 0:15~0:35: 들이마시는 숨에 "감사합니다", 내쉬는 숨에 "사랑합니다"라고 말해보세요.`,
+    `- 0:35~0:55: 내 몸을 따뜻한 빛이 감싸 안는다고 상상하세요.`,
+    `- 0:55~1:00: 당신은 사랑받기 위해 태어난 사람입니다. 이 사실을 잊지 마세요.`,
   ].join('\n');
 
   const replyText = [validate, reflect, reframe].filter(Boolean).join('\n\n');
-  const voiceText = `${validate} ${reflect} ${reframe} 이제 1분만 같이 호흡해볼까요? ${meditation.replaceAll('\n', ' ')}`;
+  const voiceText = `${validate} ${reflect} ${reframe} 이제 저와 함께, 아주 잠깐 마음의 쉼표를 찍어볼까요? ${meditation.replaceAll('\n', ' ')}`;
+
+  // Resilience Score Calculation (0-100)
+  // Higher score = Lower emotional severity
+  const severity = EMOTION_SEVERITY[analysis.emotion] ?? 5;
+  const resilienceScore = Math.max(0, 100 - (severity * 10));
+
+  // Micro-Action for High Burnout
+  let finalMeditation = meditation;
+  let finalVoiceText = voiceText;
+
+  if (analysis.emotion === 'BURNOUT' || analysis.emotion === 'OVERWHELM') {
+    const microAction = [
+      `🚨 긴급 회복 가이드 (Micro-Action)`,
+      `- 지금 당장 1분만, 아무것도 하지 말고 숨만 쉬세요.`,
+      `- 4초간 들이마시고, 4초간 멈추고, 4초간 내뱉으세요.`,
+      `- 머리를 비우려 하지 마세요. 그냥 숨이 들어오고 나가는 것만 지켜보세요.`,
+    ].join('\n');
+
+    finalMeditation = microAction;
+    finalVoiceText = `${validate} ${reflect} ${reframe} 지금은 긴 명상도 사치일 수 있어요. 딱 1분만, 저랑 같이 숨만 쉬어봐요. ${microAction.replaceAll('\n', ' ')}`;
+  }
 
   return {
     replyText,
-    voiceText,
-    meditationText: meditation,
-    tags: { emotionLabel, situationLabel },
+    voiceText: finalVoiceText,
+    meditationText: finalMeditation,
+    tags: { emotionLabel: koEmotionLabel(analysis.emotion), situationLabel: koSituationLabel(analysis.situation) },
+    resilienceScore,
   };
 }
+
+// Helper to access severity from outside if needed (duplicate from events.ts or move to shared)
+const EMOTION_SEVERITY: Record<string, number> = {
+  BURNOUT: 10,
+  OVERWHELM: 9,
+  ANXIETY: 8,
+  ANGER: 7,
+  SADNESS: 6,
+  SHAME: 5,
+  NEUTRAL: 2,
+};
 
