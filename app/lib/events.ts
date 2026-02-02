@@ -126,3 +126,109 @@ export async function computeDashboardMetrics(): Promise<DashboardMetrics> {
   };
 }
 
+// ============================================
+// Burnout Metrics - 번아웃 감소 지표
+// ============================================
+
+// 감정 심각도 점수 (높을수록 심각)
+const EMOTION_SEVERITY: Record<string, number> = {
+  BURNOUT: 10,
+  OVERWHELM: 9,
+  ANXIETY: 8,
+  ANGER: 7,
+  SADNESS: 6,
+  SHAME: 5,
+  NEUTRAL: 2,
+};
+
+export type BurnoutMetrics = {
+  avgEmotionImprovement: number; // 감정 개선율 (0~1)
+  emotionDistribution: Record<string, number>; // 감정별 세션 수
+  sessionCompletionRate: number; // 세션 완료율
+  totalSessions: number;
+  uniqueUsers: number;
+  avgSessionsPerUser: number;
+};
+
+export async function computeBurnoutMetrics(): Promise<BurnoutMetrics> {
+  const events = await listEvents();
+
+  // 감정 분포 집계
+  const emotionDistribution: Record<string, number> = {};
+
+  // 사용자별 첫 세션과 마지막 세션 감정 추적
+  const userFirstEmotion = new Map<string, { ts: number; emotion: string }>();
+  const userLatestEmotion = new Map<string, { ts: number; emotion: string }>();
+
+  let sessionStarts = 0;
+  let sessionEnds = 0;
+  const uniqueUsers = new Set<string>();
+
+  for (const e of events) {
+    if (e.type === 'session_start') {
+      sessionStarts += 1;
+      uniqueUsers.add(e.uid);
+
+      const emotion = (e.meta?.emotion as string) ?? 'NEUTRAL';
+
+      // 감정 분포 집계
+      emotionDistribution[emotion] = (emotionDistribution[emotion] ?? 0) + 1;
+
+      // 첫 세션 감정 기록
+      const firstRecord = userFirstEmotion.get(e.uid);
+      if (!firstRecord || e.ts < firstRecord.ts) {
+        userFirstEmotion.set(e.uid, { ts: e.ts, emotion });
+      }
+
+      // 최신 세션 감정 기록
+      const latestRecord = userLatestEmotion.get(e.uid);
+      if (!latestRecord || e.ts > latestRecord.ts) {
+        userLatestEmotion.set(e.uid, { ts: e.ts, emotion });
+      }
+    }
+
+    if (e.type === 'session_end') {
+      sessionEnds += 1;
+    }
+  }
+
+  // 감정 개선율 계산 (첫 세션 vs 마지막 세션)
+  let totalImprovement = 0;
+  let usersWithMultipleSessions = 0;
+
+  for (const [uid, first] of userFirstEmotion.entries()) {
+    const latest = userLatestEmotion.get(uid);
+    if (!latest || first.ts === latest.ts) continue; // 세션이 하나뿐인 사용자 제외
+
+    usersWithMultipleSessions += 1;
+    const firstSeverity = EMOTION_SEVERITY[first.emotion] ?? 5;
+    const latestSeverity = EMOTION_SEVERITY[latest.emotion] ?? 5;
+
+    // 심각도 감소 = 개선 (정규화: 10점 만점 기준)
+    const improvement = (firstSeverity - latestSeverity) / 10;
+    totalImprovement += improvement;
+  }
+
+  const avgEmotionImprovement = usersWithMultipleSessions > 0
+    ? Math.max(0, Math.min(1, (totalImprovement / usersWithMultipleSessions + 0.5))) // 0~1 범위로 정규화
+    : 0;
+
+  // 세션 완료율
+  const sessionCompletionRate = sessionStarts > 0
+    ? sessionEnds / sessionStarts
+    : 0;
+
+  // 사용자당 평균 세션 수
+  const avgSessionsPerUser = uniqueUsers.size > 0
+    ? sessionStarts / uniqueUsers.size
+    : 0;
+
+  return {
+    avgEmotionImprovement,
+    emotionDistribution,
+    sessionCompletionRate,
+    totalSessions: sessionStarts,
+    uniqueUsers: uniqueUsers.size,
+    avgSessionsPerUser,
+  };
+}

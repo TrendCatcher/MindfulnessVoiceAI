@@ -88,20 +88,3 @@ export async function POST(req: NextRequest) {
   return res;
 }
 
-import { NextResponse } from 'next/server';
-
-export async function POST(request: Request) {
-    const body = await request.json();
-    const { text } = body;
-
-    // Mock delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    console.log("Analyzing text:", text);
-
-    return NextResponse.json({
-        sentiment: "Stress Detected",
-        reply: "정말 힘드셨겠어요. 상사의 피드백이 단순히 업무에 대한 것이 아니라 인격적인 비난처럼 느껴지면 누구나 자존감이 떨어질 수 있습니다. 하지만 그 피드백이 당신의 가치를 정의하지 않는다는 걸 기억하세요.",
-        action: "breathing_exercise"
-    });
-}

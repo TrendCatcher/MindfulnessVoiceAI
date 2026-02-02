@@ -1,6 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import {
+    Container,
+    Center,
+    Stack,
+    Paper,
+    Title,
+    Text,
+    Button,
+    Textarea,
+    Group,
+    Box,
+    Loader,
+    ActionIcon,
+    Progress,
+} from '@mantine/core';
 
 type AnalyzeResponse = {
     reply: string;
@@ -34,7 +49,6 @@ export default function Home() {
             utter.lang = 'ko-KR';
             utter.rate = 1.02;
             utter.pitch = 1.0;
-            // Prefer Korean voice when available
             const voices = window.speechSynthesis.getVoices();
             const ko = voices.find((v) => (v.lang || '').toLowerCase().startsWith('ko'));
             if (ko) utter.voice = ko;
@@ -88,7 +102,6 @@ export default function Home() {
             const data = (await res.json()) as AnalyzeResponse;
             if (!res.ok) throw new Error((data as any)?.error ?? 'analyze failed');
 
-            // "Thinking" effect
             setTimeout(() => {
                 setAiResponse(data);
                 setStatus('SPEAKING');
@@ -139,116 +152,309 @@ export default function Home() {
     };
 
     return (
-        <main className="main-container relative overflow-hidden">
-            {/* Background Ambience */}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none opacity-40">
-                <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-purple-900 blur-[120px]"></div>
-                <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full bg-blue-900 blur-[100px]"></div>
+        <>
+            {/* Background Ambient Effects */}
+            <div className="background-ambient">
+                <div className="ambient-orb ambient-orb-1"></div>
+                <div className="ambient-orb ambient-orb-2"></div>
             </div>
 
-            {status === 'IDLE' && (
-                <div className="hero-section max-w-2xl mx-auto flex flex-col items-center animate-fade-in">
-                    <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6 text-center">
-                        <span className="text-gradient">Software becomes labor.</span><br />
-                        <span className="text-white text-4xl md:text-5xl mt-2 block font-medium">당신의 번아웃을 치유합니다.</span>
-                    </h1>
+            <Center mih="100vh" py={{ base: 'xl', md: '3rem' }}>
+                <Container size="sm" w="100%" px={{ base: 'md', sm: 'lg', md: 'xl' }}>
 
-                    <p className="text-gray-400 text-lg md:text-xl text-center mb-10 leading-relaxed">
-                        상사의 무리한 피드백, 끝없는 야근, 관계의 피로...<br />
-                        지금 겪고 있는 스트레스를 털어놓으세요.<br />
-                        AI 전문 심리 코치가 실시간으로 듣고 위로해드립니다.
-                    </p>
+                    {/* IDLE 상태 - 입력 폼 */}
+                    {status === 'IDLE' && (
+                        <Stack gap="xl" align="center" className="animate-fade-in">
+                            {/* 헤더 타이틀 */}
+                            <Stack gap="md" align="center">
+                                <Title
+                                    order={1}
+                                    ta="center"
+                                    fz={{ base: '2rem', sm: '2.5rem', md: '3rem' }}
+                                    fw={700}
+                                    style={{ lineHeight: 1.2 }}
+                                >
+                                    <Text
+                                        component="span"
+                                        variant="gradient"
+                                        gradient={{ from: 'cyan', to: 'violet', deg: 90 }}
+                                        inherit
+                                    >
+                                        Software becomes labor.
+                                    </Text>
+                                    <br />
+                                    <Text
+                                        component="span"
+                                        c="white"
+                                        fz={{ base: '1.5rem', sm: '2rem', md: '2.5rem' }}
+                                        fw={500}
+                                    >
+                                        당신의 번아웃을 치유합니다.
+                                    </Text>
+                                </Title>
 
-                    <div className="w-full glass-panel p-6 flex flex-col gap-4">
-                        <textarea
-                            className="w-full bg-transparent border-none text-white text-lg resize-none focus:ring-0 placeholder-gray-600 h-32"
-                            placeholder="예: 오늘 회의에서 내 의견이 묵살당해서 너무 비참했어..."
-                            value={input}
-                            onChange={(e) => setInput(e.target.value)}
-                        />
-                        <div className="flex justify-between items-center border-t border-gray-800 pt-4">
-                            <button
-                                onClick={startVoiceInput}
-                                className="text-gray-400 hover:text-white transition-colors"
-                                disabled={isRecording}
+                                <Text
+                                    c="dimmed"
+                                    size="lg"
+                                    ta="center"
+                                    maw={500}
+                                    lh={1.8}
+                                >
+                                    상사의 무리한 피드백, 끝없는 야근, 관계의 피로...
+                                    <br />
+                                    지금 겪고 있는 스트레스를 털어놓으세요.
+                                    <br />
+                                    AI 전문 심리 코치가 실시간으로 듣고 위로해드립니다.
+                                </Text>
+                            </Stack>
+
+                            {/* 입력 폼 카드 */}
+                            <Paper
+                                className="glass-paper"
+                                shadow="xl"
+                                p={{ base: 'md', sm: 'lg', md: 'xl' }}
+                                radius="lg"
+                                w="100%"
                             >
-                                {isRecording ? '🎙️ 듣는 중...' : '🎤 음성으로 말하기'}
-                            </button>
-                            <button
-                                onClick={handleSubmit}
-                                className="btn-primary"
-                                disabled={!input.trim()}
-                            >
-                                상담 시작하기
-                            </button>
-                        </div>
-                        {error && (
-                            <p className="text-sm text-red-300">{error}</p>
-                        )}
-                    </div>
-                </div>
-            )}
+                                <Stack gap="md">
+                                    <Textarea
+                                        placeholder="예: 오늘 회의에서 내 의견이 묵살당해서 너무 비참했어..."
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        minRows={4}
+                                        maxRows={6}
+                                        autosize
+                                        variant="unstyled"
+                                        size="lg"
+                                        styles={{
+                                            input: {
+                                                color: 'white',
+                                                fontSize: '1.1rem',
+                                                '&::placeholder': {
+                                                    color: 'rgba(255, 255, 255, 0.4)',
+                                                },
+                                            },
+                                        }}
+                                    />
 
-            {status === 'ANALYZING' && (
-                <div className="flex flex-col items-center justify-center h-[50vh] animate-pulse-slow">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 blur-xl mb-8 animate-pulse"></div>
-                    <h2 className="text-2xl font-light text-white">당신의 감정을 분석하고 있습니다...</h2>
-                    <p className="text-gray-500 mt-2">심리학적 프롬프트 적용 중</p>
-                </div>
-            )}
+                                    <Box
+                                        pt="md"
+                                        style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}
+                                    >
+                                        <Group justify="space-between" align="center">
+                                            <Button
+                                                variant="subtle"
+                                                color="gray"
+                                                onClick={startVoiceInput}
+                                                disabled={isRecording}
+                                                leftSection={isRecording ? '🎙️' : '🎤'}
+                                            >
+                                                {isRecording ? '듣는 중...' : '음성으로 말하기'}
+                                            </Button>
 
-            {status === 'SPEAKING' && aiResponse && (
-                <div className="max-w-2xl w-full mx-auto glass-panel p-8 flex flex-col items-center text-center animate-fade-in-up">
-                    <div className="w-32 h-32 rounded-full border-2 border-purple-500 flex items-center justify-center mb-6 relative">
-                        <div className="absolute w-full h-full rounded-full border-2 border-purple-500 animate-ping opacity-20"></div>
-                        <span className="text-4xl">🧘</span>
-                    </div>
+                                            <Button
+                                                variant="gradient"
+                                                gradient={{ from: 'cyan', to: 'violet', deg: 90 }}
+                                                size="md"
+                                                radius="md"
+                                                onClick={handleSubmit}
+                                                disabled={!input.trim()}
+                                            >
+                                                상담 시작하기
+                                            </Button>
+                                        </Group>
+                                    </Box>
 
-                    <h3 className="text-xl text-purple-400 mb-2 font-medium">Burnout Buddy's Reply</h3>
-                    <p className="text-sm text-gray-400 mb-6">{aiResponse.tags.situationLabel} · {aiResponse.tags.emotionLabel}</p>
+                                    {error && (
+                                        <Text c="red.4" size="sm">
+                                            {error}
+                                        </Text>
+                                    )}
+                                </Stack>
+                            </Paper>
+                        </Stack>
+                    )}
 
-                    <p className="text-white text-lg leading-relaxed mb-6 whitespace-pre-line">
-                        {aiResponse.reply}
-                    </p>
+                    {/* ANALYZING 상태 - 로딩 */}
+                    {status === 'ANALYZING' && (
+                        <Center mih="50vh">
+                            <Stack gap="xl" align="center" className="animate-pulse-slow">
+                                <Box
+                                    w={96}
+                                    h={96}
+                                    style={{
+                                        borderRadius: '50%',
+                                        background: 'linear-gradient(135deg, #7c3aed, #06b6d4)',
+                                        filter: 'blur(20px)',
+                                    }}
+                                />
+                                <Stack gap="xs" align="center">
+                                    <Title order={2} fw={300} c="white">
+                                        당신의 감정을 분석하고 있습니다...
+                                    </Title>
+                                    <Text c="dimmed" size="sm">
+                                        심리학적 프롬프트 적용 중
+                                    </Text>
+                                </Stack>
+                            </Stack>
+                        </Center>
+                    )}
 
-                    <div className="w-full text-left bg-black/30 rounded-2xl p-5 mb-6 border border-white/10">
-                        <div className="text-xs text-gray-400 mb-2">1분 명상 가이드</div>
-                        <div className="text-sm text-gray-200 whitespace-pre-line">{aiResponse.meditation}</div>
-                    </div>
-
-                    <div className="w-full bg-gray-900 rounded-full h-12 flex items-center px-4 mb-4">
-                        <span className="text-xs text-gray-500">▶ 0:00 / 1:00</span>
-                        {/* Fake Progress Bar */}
-                        <div className="flex-1 mx-4 h-1 bg-gray-800 rounded-full overflow-hidden">
-                            <div className="w-1/3 h-full bg-purple-500"></div>
-                        </div>
-                        <button
-                            onClick={() => speak(aiResponse.voiceText)}
-                            className="text-xs text-gray-300 hover:text-white"
+                    {/* SPEAKING 상태 - AI 응답 */}
+                    {status === 'SPEAKING' && aiResponse && (
+                        <Paper
+                            className="glass-paper animate-fade-in-up"
+                            shadow="xl"
+                            p={{ base: 'lg', md: 'xl' }}
+                            radius="lg"
+                            w="100%"
                         >
-                            다시 듣기
-                        </button>
-                    </div>
+                            <Stack gap="lg" align="center">
+                                {/* AI 아이콘 */}
+                                <Box pos="relative">
+                                    <Box
+                                        w={128}
+                                        h={128}
+                                        style={{
+                                            borderRadius: '50%',
+                                            border: '2px solid #7c3aed',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                        }}
+                                    >
+                                        <Text fz={48}>🧘</Text>
+                                    </Box>
+                                    <Box
+                                        pos="absolute"
+                                        top={0}
+                                        left={0}
+                                        w="100%"
+                                        h="100%"
+                                        className="animate-ping"
+                                        style={{
+                                            borderRadius: '50%',
+                                            border: '2px solid #7c3aed',
+                                            opacity: 0.2,
+                                        }}
+                                    />
+                                </Box>
 
-                    <button
-                        onClick={startCheckout}
-                        className="btn-primary w-full mb-4"
-                    >
-                        {aiResponse.offer.cta} (${aiResponse.offer.priceUsdMonthly}/month)
-                    </button>
+                                {/* 응답 헤더 */}
+                                <Stack gap={4} align="center">
+                                    <Text
+                                        variant="gradient"
+                                        gradient={{ from: 'violet', to: 'cyan' }}
+                                        fw={500}
+                                        size="xl"
+                                    >
+                                        Burnout Buddy's Reply
+                                    </Text>
+                                    <Text c="dimmed" size="sm">
+                                        {aiResponse.tags.situationLabel} · {aiResponse.tags.emotionLabel}
+                                    </Text>
+                                </Stack>
 
-                    <button
-                        onClick={endSession}
-                        className="text-gray-400 hover:text-white underline text-sm"
-                    >
-                        새로운 대화 시작하기
-                    </button>
-                </div>
-            )}
+                                {/* 응답 본문 */}
+                                <Text
+                                    c="white"
+                                    size="lg"
+                                    ta="center"
+                                    lh={1.8}
+                                    style={{ whiteSpace: 'pre-line' }}
+                                    maw={500}
+                                >
+                                    {aiResponse.reply}
+                                </Text>
 
-            <footer className="fixed bottom-4 text-center w-full text-xs text-gray-700 pointer-events-none">
-                © 2030 Burnout Buddy MVP. Early Access.
-            </footer>
-        </main>
+                                {/* 명상 가이드 */}
+                                <Paper
+                                    bg="rgba(0, 0, 0, 0.3)"
+                                    p="lg"
+                                    radius="lg"
+                                    w="100%"
+                                    withBorder
+                                    style={{ borderColor: 'rgba(255, 255, 255, 0.1)' }}
+                                >
+                                    <Stack gap="xs">
+                                        <Text c="dimmed" size="xs">
+                                            1분 명상 가이드
+                                        </Text>
+                                        <Text c="gray.3" size="sm" style={{ whiteSpace: 'pre-line' }}>
+                                            {aiResponse.meditation}
+                                        </Text>
+                                    </Stack>
+                                </Paper>
+
+                                {/* 오디오 플레이어 */}
+                                <Paper
+                                    bg="dark.8"
+                                    radius="xl"
+                                    p="sm"
+                                    w="100%"
+                                >
+                                    <Group gap="md" align="center">
+                                        <Text c="dimmed" size="xs">▶ 0:00 / 1:00</Text>
+                                        <Progress
+                                            value={33}
+                                            color="violet"
+                                            radius="xl"
+                                            size="xs"
+                                            style={{ flex: 1 }}
+                                        />
+                                        <Button
+                                            variant="subtle"
+                                            color="gray"
+                                            size="xs"
+                                            onClick={() => speak(aiResponse.voiceText)}
+                                        >
+                                            다시 듣기
+                                        </Button>
+                                    </Group>
+                                </Paper>
+
+                                {/* CTA 버튼 */}
+                                <Button
+                                    variant="gradient"
+                                    gradient={{ from: 'cyan', to: 'violet', deg: 90 }}
+                                    size="lg"
+                                    radius="md"
+                                    fullWidth
+                                    onClick={startCheckout}
+                                >
+                                    {aiResponse.offer.cta} (${aiResponse.offer.priceUsdMonthly}/month)
+                                </Button>
+
+                                {/* 새 대화 시작 */}
+                                <Button
+                                    variant="transparent"
+                                    c="dimmed"
+                                    size="sm"
+                                    onClick={endSession}
+                                    td="underline"
+                                >
+                                    새로운 대화 시작하기
+                                </Button>
+                            </Stack>
+                        </Paper>
+                    )}
+
+                </Container>
+            </Center>
+
+            {/* Footer */}
+            <Box
+                pos="fixed"
+                bottom={16}
+                left={0}
+                right={0}
+                ta="center"
+                style={{ pointerEvents: 'none' }}
+            >
+                <Text c="dark.5" size="xs">
+                    © 2030 Burnout Buddy MVP. Early Access.
+                </Text>
+            </Box>
+        </>
     );
 }

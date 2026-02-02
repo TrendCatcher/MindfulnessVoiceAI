@@ -8,6 +8,28 @@
       "meta": {
         "source": "redirect"
       }
+    },
+    {
+      "ts": 1770005874984,
+      "uid": "4f3c0919-c470-44ae-9a2f-0fbf117076a4",
+      "type": "session_start",
+      "meta": {
+        "emotion": "ANXIETY",
+        "situation": "GENERAL"
+      }
+    },
+    {
+      "ts": 1770005989036,
+      "uid": "4f3c0919-c470-44ae-9a2f-0fbf117076a4",
+      "type": "session_end"
+    },
+    {
+      "ts": 1770005989917,
+      "uid": "4f3c0919-c470-44ae-9a2f-0fbf117076a4",
+      "type": "checkout_started",
+      "meta": {
+        "provider": "stripe_payment_link"
+      }
     }
   ]
 }
